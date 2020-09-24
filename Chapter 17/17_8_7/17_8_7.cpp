@@ -1,0 +1,71 @@
+//
+// Created by klause on 2020/9/23.
+//
+
+// "/Users/klause/Documents/CLionProjects/Cpp Primer Plus/Chapter 17/17_8_7/strings.dat"
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <cstdlib>
+#include <algorithm>
+#include "store.h"
+
+using namespace std;
+
+inline void ShowStr(const std::string &s);
+
+void GetStrs(std::ifstream &fin, std::vector<std::string> &vistr);
+
+int main() {
+    vector<string> vostr;
+    string temp;
+    string file("/Users/klause/Documents/CLionProjects/Cpp Primer Plus/Chapter 17/17_8_7/strings.dat");
+
+    // acquire strings
+    cout << "Enter strings (empty line to quit):\n";
+    while (getline(cin, temp) && temp[0] != '\0')
+        vostr.push_back(temp);
+    cout << "Here is your input" << endl;
+    for_each(vostr.begin(), vostr.end(), ShowStr);
+
+    // store in a file
+    ofstream fout(file.c_str(), ios_base::out | ios_base::binary);
+    for_each(vostr.begin(), vostr.end(), Store(fout));
+    fout.close();
+
+    // recover file contents
+    vector<string> vistr;
+    ifstream fin(file.c_str(), ios_base::in | ios_base::binary);
+    if (!fin.is_open()) {
+        cerr << "Could not open file for input." << endl;
+        exit(EXIT_FAILURE);
+    }
+    GetStrs(fin, vistr);
+    cout << "\nHere are the strings read from the file:\n";
+    for_each(vistr.begin(), vistr.end(), ShowStr);
+
+    return 0;
+}
+
+inline void ShowStr(const std::string &s) {
+    cout << s << endl;
+}
+
+void GetStrs(std::ifstream &fin, std::vector<std::string> &vistr) {
+    string temp;
+    char ch;
+    size_t len;
+
+    //这里需要先读取字符长度，再确定是否达到文件结尾
+    // 因为当读完最后一个词之后，并不会判定达到文件结尾，需要再读一次才会判定为达到文件结尾
+    while (fin.read((char *) &len, sizeof(size_t)) and !fin.eof()) {
+        for (int i = 0; i < len; ++i) {
+            fin.read(&ch, sizeof(char));
+            temp.push_back(ch);
+        }
+        vistr.push_back(temp);
+        temp = {};
+    }
+}
